@@ -6,11 +6,17 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"fmt"
 	"gopkg.in/yaml.v2"
 )
+
+const K8sShowCluster = "K8S_SHOW_CLUSTER"
+const K8sShowContext = "K8S_SHOW_CONTEXT"
+const K8sShowNamespace = "K8S_SHOW_NAMESPACE"
+const K8sShowUser = "K8S_SHOW_USER"
 
 type KubeContext struct {
 	Context struct {
@@ -66,10 +72,13 @@ func segmentKube(p *powerline) {
 
 	cluster := ""
 	namespace := ""
+	user := ""
+
 	for _, context := range config.Contexts {
 		if context.Name == config.CurrentContext {
 			cluster = context.Context.Cluster
 			namespace = context.Context.Namespace
+			user = context.Context.User
 			break
 		}
 	}
@@ -84,21 +93,29 @@ func segmentKube(p *powerline) {
 		}
 	}
 
-	// Only draw the icon once
-	kubeIconHasBeenDrawnYet := false
-	if cluster != "" {
-		kubeIconHasBeenDrawnYet = true
+	contextName := ""
+	if getPreference(K8sShowContext, p.theme.KubeShowContext) {
+		contextName = config.CurrentContext
+	}
+
+	p.appendSegment("kube-icon", segment{
+		content:    fmt.Sprintf("⎈ %s", contextName),
+		foreground: p.theme.KubeClusterFg,
+		background: p.theme.KubeClusterBg,
+	})
+
+	if cluster != "" && getPreference(K8sShowCluster, p.theme.KubeShowCluster) {
 		p.appendSegment("kube-cluster", segment{
-			content:    fmt.Sprintf("⎈ %s", cluster),
+			content:    cluster,
 			foreground: p.theme.KubeClusterFg,
 			background: p.theme.KubeClusterBg,
 		})
 	}
 
-	if namespace != "" {
+	if namespace != "" && getPreference(K8sShowNamespace, p.theme.KubeShowNamespace) {
 		content := namespace
-		if !kubeIconHasBeenDrawnYet {
-			content = fmt.Sprintf("⎈ %s", content)
+		if user != "" && user != contextName && getPreference(K8sShowUser, p.theme.KubeShowUser) {
+			content = fmt.Sprintf("%s@%s", user, content)
 		}
 		p.appendSegment("kube-namespace", segment{
 			content:    content,
@@ -106,4 +123,13 @@ func segmentKube(p *powerline) {
 			background: p.theme.KubeNamespaceBg,
 		})
 	}
+}
+
+func getPreference(key string, fallback bool) bool {
+	if value, ok := os.LookupEnv(key); ok {
+		if s, err := strconv.ParseBool(value); err == nil {
+			return s
+		}
+	}
+	return fallback
 }

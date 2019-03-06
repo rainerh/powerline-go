@@ -55,6 +55,11 @@ type Theme struct {
 	KubeNamespaceFg uint8
 	KubeNamespaceBg uint8
 
+	KubeShowContext   bool
+	KubeShowCluster   bool
+	KubeShowNamespace bool
+	KubeShowUser      bool
+
 	DotEnvFg uint8
 	DotEnvBg uint8
 

@@ -215,6 +215,16 @@ Usage of powerline-go:
     	 Minimum width of a segment, segments longer than this will be shortened if space is limited. Setting this to 0 disables it.
     	 (default 16)
 ```
+
+#### Environment Variables
+
+- K8S_SHOW_CONTEXT
+- K8S_SHOW_CLUSTER
+- K8S_SHOW_NAMESPACE
+- K8S_SHOW_USER
+
+
+
 ### Eval
 
 If using `eval` and `-modules-right` is desired, the shell setup must be modified slightly, as shown below:
