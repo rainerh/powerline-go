@@ -177,7 +177,7 @@ func segmentGit(p *powerline) {
 	}
 
 	p.appendSegment("git-branch", segment{
-		content:    branch,
+		content:    fmt.Sprintf(" %s", branch),
 		foreground: foreground,
 		background: background,
 	})
