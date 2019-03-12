@@ -72,7 +72,6 @@ func segmentKube(p *powerline) {
 		}
 	}
 
-	contextName := ""
 	cluster := ""
 	namespace := ""
 	user := ""
@@ -96,16 +95,6 @@ func segmentKube(p *powerline) {
 		}
 	}
 
-	if getPreference(K8sShowContext, p.theme.KubeShowContext) {
-		contextName = config.CurrentContext
-	}
-
-	p.appendSegment("kube-icon", segment{
-		content:    fmt.Sprintf("⎈ %s", contextName),
-		foreground: p.theme.KubeClusterFg,
-		background: p.theme.KubeClusterBg,
-	})
-
 	// With AWS EKS, cluster names are ARNs; it makes more sense to shorten them
 	// so "eks-infra" instead of "arn:aws:eks:us-east-1:XXXXXXXXXXXX:cluster/eks-infra
 	const arnRegexString string = "^arn:aws:eks:[[:alnum:]-]+:[[:digit:]]+:cluster/(.*)$"
@@ -115,6 +104,13 @@ func segmentKube(p *powerline) {
 		cluster = arnMatches[1]
 	}
 
+	p.appendSegment("kube-icon", segment{
+		content:    fmt.Sprintf("⎈"),
+		foreground: p.theme.KubeIconFg,
+		background: p.theme.KubeIconBg,
+	})
+
+	// Only draw the icon once
 	if cluster != "" && getPreference(K8sShowCluster, p.theme.KubeShowCluster) {
 		p.appendSegment("kube-cluster", segment{
 			content:    cluster,
@@ -123,11 +119,20 @@ func segmentKube(p *powerline) {
 		})
 	}
 
-	if namespace != "" && getPreference(K8sShowNamespace, p.theme.KubeShowNamespace) {
-		content := namespace
-		if user != "" && user != contextName && getPreference(K8sShowUser, p.theme.KubeShowUser) {
+	if getPreference(K8sShowContext, p.theme.KubeShowNamespace) {
+		content := config.CurrentContext
+		if user != "" && user != config.CurrentContext && getPreference(K8sShowUser, p.theme.KubeShowUser) {
 			content = fmt.Sprintf("%s@%s", user, content)
 		}
+		p.appendSegment("kube-context", segment{
+			content:    content,
+			foreground: p.theme.KubeContextFg,
+			background: p.theme.KubeContextBg,
+		})
+	}
+
+	if namespace != "" && getPreference(K8sShowNamespace, p.theme.KubeShowNamespace) {
+		content := namespace
 		p.appendSegment("kube-namespace", segment{
 			content:    content,
 			foreground: p.theme.KubeNamespaceFg,
