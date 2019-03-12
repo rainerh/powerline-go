@@ -5,11 +5,13 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 
 	"fmt"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -70,6 +72,7 @@ func segmentKube(p *powerline) {
 		}
 	}
 
+	contextName := ""
 	cluster := ""
 	namespace := ""
 	user := ""
@@ -93,7 +96,6 @@ func segmentKube(p *powerline) {
 		}
 	}
 
-	contextName := ""
 	if getPreference(K8sShowContext, p.theme.KubeShowContext) {
 		contextName = config.CurrentContext
 	}
@@ -103,6 +105,15 @@ func segmentKube(p *powerline) {
 		foreground: p.theme.KubeClusterFg,
 		background: p.theme.KubeClusterBg,
 	})
+
+	// With AWS EKS, cluster names are ARNs; it makes more sense to shorten them
+	// so "eks-infra" instead of "arn:aws:eks:us-east-1:XXXXXXXXXXXX:cluster/eks-infra
+	const arnRegexString string = "^arn:aws:eks:[[:alnum:]-]+:[[:digit:]]+:cluster/(.*)$"
+	arnRe := regexp.MustCompile(arnRegexString)
+
+	if arnMatches := arnRe.FindStringSubmatch(cluster); arnMatches != nil && *p.args.ShortenEKSNames {
+		cluster = arnMatches[1]
+	}
 
 	if cluster != "" && getPreference(K8sShowCluster, p.theme.KubeShowCluster) {
 		p.appendSegment("kube-cluster", segment{
